@@ -1,33 +1,46 @@
-var http = require('http');
-var url = require('url');
-var dt = require('./datetime');
+const express = require('express')
+const expressHandlebars = require('express-handlebars')
 
+const app = express()
 
-const server = http.createServer((request, response) => {
-    // Write the request to the log. 
-    console.log(request);
+// configure Handlebars view engine
+app.engine('handlebars', expressHandlebars({
+  defaultLayout: 'main',
+}))
+app.set('view engine', 'handlebars')
 
-    // Standard Hello World.
-    response.writeHead(200, {'Content-Type': 'text/html'});
-    response.write('<h3>Hello World!</h3>')
+app.use(express.static(__dirname + '/public'))
 
-    // Access funcion from a separate JavaScript module.
-    response.write("The date and time are currently: " + dt.myDateTime() + "<br><br>");
+const port = process.env.PORT || 3000
 
-    // Show the url. 
-    response.write("req.url="+request.url+"<br><br>");
+app.get('/', (req, res) => res.render('home'))
 
-    // Suggest adding something tl the url so that we can parse it. 
-    response.write("Consider adding '/test?year=2017&month=July' to the URL.<br><br>");
-    var q = url.parse(request.url, true).query;
-    var txt = q.year + " " + q.month;
-    response.write("txt="+txt);
+const fortunes = [
+  "Conquer your fears or they will conquer you.",
+  "Rivers need springs.",
+  "Do not fear what you don't know.",
+  "You will have a pleasant surprise.",
+  "Whenever possible, keep it simple.",
+]
 
-    // Close the response
-    response.end('<h3>The End.</h3>');
-});
+app.get('/about', (req, res) => {
+  const randomFortune = fortunes[Math.floor(Math.random()*fortunes.length)]
+  res.render('about', { fortune: randomFortune })
+})
 
-const port = process.env.PORT || 1337;
-server.listen(port);
+// custom 404 page
+app.use((req, res) => {
+  res.status(404)
+  res.render('404')
+})
 
-console.log("Server running at http://localhost:%d", port);
+// custom 500 page
+app.use((err, req, res, next) => {
+  console.error(err.message)
+  res.status(500)
+  res.render('500')
+})
+
+app.listen(port, () => console.log(
+  `Express started on http://localhost:${port}; ` +
+  `press Ctrl-C to terminate.`))
