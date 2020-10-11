@@ -1,24 +1,24 @@
-const express = require('express')
-
-const app = express()
-
+const http = require('http')
 const port = process.env.PORT || 3000
 
-// custom 404 page
-app.use((req, res) => {
-  res.type('text/plain')
-  res.status(404)
-  res.send('404 - Not Found')
-})
+const server = http.createServer((req,res) => {
+  // normalize url by removing querystring, optional
+  // trailing slash, and making it lowercase
+  const path = req.url.replace(/\/?(?:\?.*)?$/, '').toLowerCase()
+  switch(path) {
+    case '':
+      res.writeHead(200, { 'Content-Type': 'text/plain' })
+      res.end('Homepage')
+      break
+    case '/about':
+      res.writeHead(200, { 'Content-Type': 'text/plain' })
+      res.end('About')
+      break
+    default:
+      res.writeHead(404, { 'Content-Type': 'text/plain' })
+      res.end('Not Found')
+      break
+  } })
 
-// custom 500 page
-app.use((err, req, res, next) => {
-  console.error(err.message)
-  res.type('text/plain')
-  res.status(500)
-  res.send('500 - Server Error')
-})
-
-app.listen(port, () => console.log(
-  `Express started on http://localhost:${port}; ` +
-  `press Ctrl-C to terminate.`))
+server.listen(port, () => console.log(`server started on port ${port}; ` +
+  'press Ctrl-C to terminate....'))
